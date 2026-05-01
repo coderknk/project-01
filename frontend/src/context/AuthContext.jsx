@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   }, [bootstrapAuth]);
 
   const login = async (email, password) => {
-    const res = await api.post("/auth/login", { email, password });
+    const res = await api.post("https://backend-production-c0ca.up.railway.app/auth/login", { email, password });
     const { accessToken: at, refreshToken: rt, user: currentUser } = res.data.data;
 
     setAccessToken(at);
