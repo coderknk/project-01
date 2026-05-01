@@ -8,10 +8,12 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import api, { setAuthToken } from "../api/client";
+import { apiBaseUrl } from "../config.js";
 
 const AuthContext = createContext(null);
 
 const STORAGE_KEY = "ttm_auth";
+
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
@@ -41,7 +43,7 @@ export const AuthProvider = ({ children }) => {
       if (!parsed?.refreshToken) throw new Error("Missing refresh token");
 
       setRefreshToken(parsed.refreshToken);
-      const refreshRes = await api.post("/auth/refresh", {
+      const refreshRes = await api.post(`${apiBaseUrl}/auth/refresh`, {
         refreshToken: parsed.refreshToken,
       });
 
@@ -49,7 +51,7 @@ export const AuthProvider = ({ children }) => {
       setAccessToken(newAccessToken);
       setAuthToken(newAccessToken);
 
-      const meRes = await api.get("/auth/me");
+      const meRes = await api.get(`${apiBaseUrl}/auth/me`);
       setUser(meRes.data.data.user);
 
       localStorage.setItem(
@@ -68,7 +70,7 @@ export const AuthProvider = ({ children }) => {
   }, [bootstrapAuth]);
 
   const login = async (email, password) => {
-    const res = await api.post("https://backend-production-c0ca.up.railway.app/api/auth/login", { email, password });
+    const res = await api.post(`${apiBaseUrl}/auth/login`, { email, password });
     const { accessToken: at, refreshToken: rt, user: currentUser } = res.data.data;
 
     setAccessToken(at);
@@ -81,10 +83,10 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (payload) => {
     try {
-      await api.post("/auth/register", payload);
+      await api.post(`${apiBaseUrl}/auth/register`, payload);
     } catch (error) {
       if (error.response?.status === 404) {
-        await api.post("/auth/signup", payload);
+        await api.post(`${apiBaseUrl}/auth/signup`, payload);
         return;
       }
       throw error;
