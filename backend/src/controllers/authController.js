@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const { createAccessToken, createRefreshToken } = require("../utils/token");
+const { sendSuccess } = require("../utils/response");
 
 const sanitizeUser = (user) => ({
   id: user._id,
@@ -22,16 +23,19 @@ const signup = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const allowedRole = role === "admin" ? "admin" : "member";
+
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: role || "member",
+      role: allowedRole,
     });
 
-    res.status(201).json({
+    sendSuccess(res, {
+      statusCode: 201,
       message: "User created successfully",
-      user: sanitizeUser(user),
+      data: { user: sanitizeUser(user) },
     });
   } catch (error) {
     next(error);
@@ -59,10 +63,13 @@ const login = async (req, res, next) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    res.json({
-      accessToken,
-      refreshToken,
-      user: sanitizeUser(user),
+    sendSuccess(res, {
+      message: "Login successful",
+      data: {
+        accessToken,
+        refreshToken,
+        user: sanitizeUser(user),
+      },
     });
   } catch (error) {
     next(error);
@@ -80,14 +87,20 @@ const refresh = async (req, res, next) => {
     }
 
     const accessToken = createAccessToken({ id: user._id, role: user.role });
-    res.json({ accessToken });
+    sendSuccess(res, {
+      message: "Token refreshed",
+      data: { accessToken },
+    });
   } catch (error) {
     next(new AppError("Refresh token expired or invalid", 401));
   }
 };
 
 const me = async (req, res) => {
-  res.json({ user: req.user });
+  sendSuccess(res, {
+    message: "Current user fetched",
+    data: { user: req.user },
+  });
 };
 
 module.exports = { signup, login, refresh, me };

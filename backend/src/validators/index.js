@@ -24,6 +24,10 @@ const refreshValidation = [
 const idParamValidation = [
   param("id").isMongoId().withMessage("Invalid ID parameter"),
 ];
+const teamMemberDeleteValidation = [
+  param("id").isMongoId().withMessage("Invalid ID parameter"),
+  param("userId").isMongoId().withMessage("Invalid userId parameter"),
+];
 
 const projectValidation = [
   body("name").trim().notEmpty().withMessage("Project name is required"),
@@ -56,13 +60,26 @@ const teamMembersValidation = [
 const taskValidation = [
   body("title").trim().notEmpty().withMessage("Task title is required"),
   body("description").optional().trim(),
-  body("assignedTo").isMongoId().withMessage("assignedTo must be a valid user id"),
-  body("projectId").isMongoId().withMessage("projectId must be a valid project id"),
+  body("assigneeId")
+    .optional()
+    .isMongoId()
+    .withMessage("assigneeId must be a valid user id"),
+  body("assignedTo")
+    .optional()
+    .isMongoId()
+    .withMessage("assignedTo must be a valid user id"),
+  body("teamId").optional().isMongoId().withMessage("teamId must be a valid team id"),
+  body("projectId").optional().isMongoId().withMessage("projectId must be a valid project id"),
   body("status")
     .optional()
     .isIn(["todo", "in-progress", "done"])
     .withMessage("Invalid status"),
   body("dueDate").isISO8601().withMessage("dueDate must be a valid date"),
+  body("priority")
+    .optional()
+    .isIn(["low", "medium", "high"])
+    .withMessage("Invalid priority"),
+  body("progressNote").optional().trim(),
 ];
 
 const taskStatusValidation = [
@@ -72,12 +89,30 @@ const taskStatusValidation = [
 ];
 
 const taskQueryValidation = [
+  query("teamId").optional().isMongoId().withMessage("Invalid team filter"),
   query("projectId").optional().isMongoId().withMessage("Invalid project filter"),
+  query("assigneeId").optional().isMongoId().withMessage("Invalid user filter"),
   query("assignedTo").optional().isMongoId().withMessage("Invalid user filter"),
   query("status")
     .optional()
     .isIn(["todo", "in-progress", "done"])
     .withMessage("Invalid status filter"),
+  query("priority")
+    .optional()
+    .isIn(["low", "medium", "high"])
+    .withMessage("Invalid priority filter"),
+];
+
+const teamValidation = [
+  body("name").trim().notEmpty().withMessage("Team name is required"),
+];
+
+const teamMemberValidation = [
+  body("userId").isMongoId().withMessage("userId must be a valid user id"),
+  body("memberRole")
+    .optional()
+    .isIn(["member", "manager"])
+    .withMessage("Invalid member role"),
 ];
 
 module.exports = {
@@ -91,4 +126,7 @@ module.exports = {
   taskStatusValidation,
   taskQueryValidation,
   idParamValidation,
+  teamValidation,
+  teamMemberValidation,
+  teamMemberDeleteValidation,
 };

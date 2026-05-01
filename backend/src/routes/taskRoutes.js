@@ -24,6 +24,7 @@ router.get("/", taskQueryValidation, validate, getTasks);
 router.get("/dashboard/stats", getDashboardStats);
 router.post("/", authorize("admin"), taskValidation, validate, createTask);
 router.put("/:id", authorize("admin"), idParamValidation, validate, updateTask);
+router.patch("/:id", idParamValidation, validate, updateTaskStatus);
 router.patch("/:id/status", idParamValidation, taskStatusValidation, validate, updateTaskStatus);
 router.delete("/:id", authorize("admin"), idParamValidation, validate, deleteTask);
 

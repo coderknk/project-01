@@ -13,8 +13,9 @@ const AppLayout = () => (
     <main className="mx-auto max-w-6xl px-4 py-6">
       <Routes>
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/teams" element={<ProjectsPage />} />
+        <Route path="/tasks" element={<TasksPage view="team" />} />
+        <Route path="/my-tasks" element={<TasksPage view="mine" />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </main>

@@ -27,8 +27,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="mx-auto mt-16 max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-2xl font-semibold">Login</h2>
+    <div className="mx-auto mt-16 max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p className="text-xs font-semibold tracking-[0.2em] text-violet-600">ETHARA.AI</p>
+      <h2 className="mb-4 text-2xl font-semibold">Welcome back</h2>
       <ErrorAlert message={error} />
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
         <input

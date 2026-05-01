@@ -8,14 +8,32 @@ const errorHandler = require("./middleware/errorMiddleware");
 
 const authRoutes = require("./routes/authRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const teamRoutes = require("./routes/teamRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+      const isLocalDevOrigin =
+        typeof origin === "string" &&
+        /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
+
+      if (!origin || allowedOrigins.includes(origin) || isLocalDevOrigin) {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS not allowed"));
+    },
     credentials: true,
   })
 );
@@ -29,6 +47,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/teams", teamRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/users", userRoutes);
 

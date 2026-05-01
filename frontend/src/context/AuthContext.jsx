@@ -45,12 +45,12 @@ export const AuthProvider = ({ children }) => {
         refreshToken: parsed.refreshToken,
       });
 
-      const newAccessToken = refreshRes.data.accessToken;
+      const newAccessToken = refreshRes.data.data.accessToken;
       setAccessToken(newAccessToken);
       setAuthToken(newAccessToken);
 
       const meRes = await api.get("/auth/me");
-      setUser(meRes.data.user);
+      setUser(meRes.data.data.user);
 
       localStorage.setItem(
         STORAGE_KEY,
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
-    const { accessToken: at, refreshToken: rt, user: currentUser } = res.data;
+    const { accessToken: at, refreshToken: rt, user: currentUser } = res.data.data;
 
     setAccessToken(at);
     setRefreshToken(rt);
@@ -80,7 +80,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (payload) => {
-    await api.post("/auth/signup", payload);
+    try {
+      await api.post("/auth/register", payload);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        await api.post("/auth/signup", payload);
+        return;
+      }
+      throw error;
+    }
   };
 
   const value = useMemo(

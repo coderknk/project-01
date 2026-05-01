@@ -35,8 +35,9 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="mx-auto mt-16 max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-2xl font-semibold">Register</h2>
+    <div className="mx-auto mt-16 max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p className="text-xs font-semibold tracking-[0.2em] text-violet-600">ETHARA.AI</p>
+      <h2 className="mb-4 text-2xl font-semibold">Create account</h2>
       <ErrorAlert message={error} />
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
         <input
@@ -65,12 +66,7 @@ const RegisterPage = () => {
           onChange={handleChange}
           required
         />
-        <select
-          name="role"
-          className="w-full rounded border border-slate-300 px-3 py-2"
-          value={form.role}
-          onChange={handleChange}
-        >
+        <select name="role" className="w-full rounded border border-slate-300 px-3 py-2" value={form.role} onChange={handleChange}>
           <option value="member">Member</option>
           <option value="admin">Admin</option>
         </select>

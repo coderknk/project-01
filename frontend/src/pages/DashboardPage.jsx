@@ -13,7 +13,7 @@ const DashboardPage = () => {
     const loadStats = async () => {
       try {
         const res = await api.get("/tasks/dashboard/stats");
-        setStats(res.data);
+        setStats(res.data.data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load dashboard");
       } finally {
@@ -33,6 +33,7 @@ const DashboardPage = () => {
       {stats && (
         <div className="grid gap-4 md:grid-cols-3">
           <StatsCard label="Total Tasks" value={stats.totalTasks} />
+          <StatsCard label="In Progress" value={stats.inProgressTasks} />
           <StatsCard label="Completed Tasks" value={stats.completedTasks} />
           <StatsCard label="Overdue Tasks" value={stats.overdueTasks} />
         </div>

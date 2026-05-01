@@ -6,21 +6,22 @@ import { useAuth } from "../context/AuthContext";
 
 const ProjectsPage = () => {
   const { user } = useAuth();
-  const [projects, setProjects] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ name: "", description: "", teamMembers: [] });
+  const [form, setForm] = useState({ name: "" });
+  const [memberForm, setMemberForm] = useState({});
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [projectRes, userRes] = await Promise.all([
-        api.get("/projects"),
+      const [teamRes, userRes] = await Promise.all([
+        api.get("/teams"),
         api.get("/users"),
       ]);
-      setProjects(projectRes.data);
-      setUsers(userRes.data);
+      setTeams(teamRes.data.data.teams);
+      setUsers(userRes.data.data.users);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load projects");
     } finally {
@@ -35,25 +36,32 @@ const ProjectsPage = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/projects", form);
-      setForm({ name: "", description: "", teamMembers: [] });
+      await api.post("/teams", form);
+      setForm({ name: "" });
       loadData();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create project");
     }
   };
 
-  const handleMemberChange = (e) => {
-    const values = Array.from(e.target.selectedOptions).map((option) => option.value);
-    setForm((prev) => ({ ...prev, teamMembers: values }));
-  };
-
-  const removeProject = async (id) => {
+  const addMember = async (teamId) => {
     try {
-      await api.delete(`/projects/${id}`);
+      const selectedUserId = memberForm[teamId];
+      if (!selectedUserId) return;
+      await api.post(`/teams/${teamId}/members`, { userId: selectedUserId, memberRole: "member" });
+      setMemberForm((prev) => ({ ...prev, [teamId]: "" }));
       loadData();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete project");
+      setError(err.response?.data?.message || "Failed to add member");
+    }
+  };
+
+  const removeMember = async (teamId, userId) => {
+    try {
+      await api.delete(`/teams/${teamId}/members/${userId}`);
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to remove member");
     }
   };
 
@@ -61,56 +69,72 @@ const ProjectsPage = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">Projects</h2>
+      <h2 className="text-2xl font-semibold">Teams</h2>
       <ErrorAlert message={error} />
 
       {user?.role === "admin" && (
         <form onSubmit={handleCreate} className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h3 className="font-semibold">Create Project</h3>
+          <h3 className="font-semibold">Create Team</h3>
           <input
             className="w-full rounded border border-slate-300 px-3 py-2"
-            placeholder="Project name"
+            placeholder="Team name"
             value={form.name}
             onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
             required
           />
-          <textarea
-            className="w-full rounded border border-slate-300 px-3 py-2"
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-          />
-          <select multiple className="w-full rounded border border-slate-300 px-3 py-2" onChange={handleMemberChange}>
-            {users.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.name} ({u.role})
-              </option>
-            ))}
-          </select>
           <button className="rounded bg-slate-900 px-4 py-2 text-white" type="submit">
-            Create Project
+            Create Team
           </button>
         </form>
       )}
 
       <div className="grid gap-3">
-        {projects.map((project) => (
-          <div key={project._id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between">
+        {teams.map((team) => (
+          <div key={team._id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold">{project.name}</h3>
-                <p className="text-sm text-slate-600">{project.description || "No description"}</p>
-                <p className="mt-2 text-xs text-slate-500">
-                  Team: {project.teamMembers?.map((m) => m.name).join(", ") || "No members"}
-                </p>
+                <h3 className="text-lg font-semibold">{team.name}</h3>
+                <p className="mt-2 text-xs text-slate-500">Members</p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {team.members?.map((member) => (
+                    <span key={member._id} className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">
+                      {member.userId?.name} ({member.memberRole})
+                    </span>
+                  ))}
+                </div>
               </div>
               {user?.role === "admin" && (
-                <button
-                  onClick={() => removeProject(project._id)}
-                  className="rounded bg-red-600 px-3 py-1 text-sm text-white"
-                >
-                  Delete
-                </button>
+                <div className="flex min-w-56 flex-col gap-2">
+                  <select
+                    className="rounded border border-slate-300 px-3 py-2"
+                    value={memberForm[team._id] || ""}
+                    onChange={(e) => setMemberForm((prev) => ({ ...prev, [team._id]: e.target.value }))}
+                  >
+                    <option value="">Select user to add</option>
+                    {users.map((u) => (
+                      <option key={u._id} value={u._id}>
+                        {u.name} ({u.role})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => addMember(team._id)}
+                    className="rounded bg-slate-900 px-3 py-1 text-sm text-white"
+                  >
+                    Add member
+                  </button>
+                  {team.members?.map((member) => (
+                    <button
+                      key={member._id}
+                      type="button"
+                      onClick={() => removeMember(team._id, member.userId?._id)}
+                      className="rounded bg-red-600 px-3 py-1 text-xs text-white"
+                    >
+                      Remove {member.userId?.name}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>
