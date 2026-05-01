@@ -3,6 +3,7 @@ import api from "../api/client";
 import ErrorAlert from "../components/ErrorAlert";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
+import { apiBaseUrl } from "../config.js";
 
 const ProjectsPage = () => {
   const { user } = useAuth();
@@ -17,8 +18,8 @@ const ProjectsPage = () => {
     try {
       setLoading(true);
       const [teamRes, userRes] = await Promise.all([
-        api.get("/teams"),
-        api.get("/users"),
+        api.get(`${apiBaseUrl}/teams`),
+        api.get(`${apiBaseUrl}/users`),
       ]);
       setTeams(teamRes.data.data.teams);
       setUsers(userRes.data.data.users);
@@ -36,7 +37,7 @@ const ProjectsPage = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/teams", form);
+      await api.post(`${apiBaseUrl}/teams`, form);
       setForm({ name: "" });
       loadData();
     } catch (err) {
@@ -48,7 +49,7 @@ const ProjectsPage = () => {
     try {
       const selectedUserId = memberForm[teamId];
       if (!selectedUserId) return;
-      await api.post(`/teams/${teamId}/members`, { userId: selectedUserId, memberRole: "member" });
+      await api.post(`${apiBaseUrl}/teams/${teamId}/members`, { userId: selectedUserId, memberRole: "member" });
       setMemberForm((prev) => ({ ...prev, [teamId]: "" }));
       loadData();
     } catch (err) {
@@ -73,16 +74,16 @@ const ProjectsPage = () => {
       <ErrorAlert message={error} />
 
       {user?.role === "admin" && (
-        <form onSubmit={handleCreate} className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+        <form onSubmit={handleCreate} className="p-4 bg-white rounded-lg border-slate-200 shadow-sm space-y-3 border">
           <h3 className="font-semibold">Create Team</h3>
           <input
-            className="w-full rounded border border-slate-300 px-3 py-2"
+            className="px-3 py-2 w-full border-slate-300 rounded border"
             placeholder="Team name"
             value={form.name}
             onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
             required
           />
-          <button className="rounded bg-slate-900 px-4 py-2 text-white" type="submit">
+          <button className="px-4 py-2 text-white bg-slate-900 rounded" type="submit">
             Create Team
           </button>
         </form>
@@ -90,23 +91,23 @@ const ProjectsPage = () => {
 
       <div className="grid gap-3">
         {teams.map((team) => (
-          <div key={team._id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div key={team._id} className="p-4 bg-white rounded-lg border-slate-200 shadow-sm border">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-lg font-semibold">{team.name}</h3>
                 <p className="mt-2 text-xs text-slate-500">Members</p>
-                <div className="mt-1 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-1">
                   {team.members?.map((member) => (
-                    <span key={member._id} className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">
+                    <span key={member._id} className="px-2 py-1 text-xs text-slate-700 bg-slate-100 rounded-full">
                       {member.userId?.name} ({member.memberRole})
                     </span>
                   ))}
                 </div>
               </div>
               {user?.role === "admin" && (
-                <div className="flex min-w-56 flex-col gap-2">
+                <div className="flex flex-col gap-2 min-w-56">
                   <select
-                    className="rounded border border-slate-300 px-3 py-2"
+                    className="px-3 py-2 border-slate-300 rounded border"
                     value={memberForm[team._id] || ""}
                     onChange={(e) => setMemberForm((prev) => ({ ...prev, [team._id]: e.target.value }))}
                   >
@@ -120,7 +121,7 @@ const ProjectsPage = () => {
                   <button
                     type="button"
                     onClick={() => addMember(team._id)}
-                    className="rounded bg-slate-900 px-3 py-1 text-sm text-white"
+                    className="px-3 py-1 text-sm text-white bg-slate-900 rounded"
                   >
                     Add member
                   </button>
@@ -129,7 +130,7 @@ const ProjectsPage = () => {
                       key={member._id}
                       type="button"
                       onClick={() => removeMember(team._id, member.userId?._id)}
-                      className="rounded bg-red-600 px-3 py-1 text-xs text-white"
+                      className="px-3 py-1 text-xs text-white bg-red-600 rounded"
                     >
                       Remove {member.userId?.name}
                     </button>

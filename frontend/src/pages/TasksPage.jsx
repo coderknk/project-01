@@ -3,6 +3,7 @@ import api from "../api/client";
 import ErrorAlert from "../components/ErrorAlert";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
+import { apiBaseUrl } from "../config";
 
 const statusOptions = ["todo", "in-progress", "done"];
 const priorityOptions = ["low", "medium", "high"];
@@ -39,9 +40,9 @@ const TasksPage = ({ view = "team" }) => {
     try {
       setLoading(true);
       const [taskRes, teamRes, userRes] = await Promise.all([
-        api.get(`/tasks${queryString ? `?${queryString}` : ""}`),
-        api.get("/teams"),
-        api.get("/users"),
+        api.get(`${apiBaseUrl}/tasks${queryString ? `?${queryString}` : ""}`),
+        api.get(`${apiBaseUrl}/teams`),
+        api.get(`${apiBaseUrl}/users`),
       ]);
       setTasks(taskRes.data.data.tasks);
       setTeams(teamRes.data.data.teams);
@@ -60,7 +61,7 @@ const TasksPage = ({ view = "team" }) => {
   const createTask = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/tasks", form);
+      await api.post(`${apiBaseUrl}/tasks`, form);
       setForm({
         title: "",
         description: "",
@@ -78,7 +79,7 @@ const TasksPage = ({ view = "team" }) => {
 
   const updateStatus = async (taskId, status) => {
     try {
-      await api.patch(`/tasks/${taskId}`, { status });
+      await api.patch(`${apiBaseUrl}/tasks/${taskId}`, { status });
       loadData();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update status");
@@ -94,9 +95,9 @@ const TasksPage = ({ view = "team" }) => {
       <h2 className="text-2xl font-semibold">{view === "mine" ? "My Tasks" : "Team Tasks"}</h2>
       <ErrorAlert message={error} />
 
-      <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
+      <div className="grid gap-3 p-4 bg-white rounded-lg border-slate-200 shadow-sm border md:grid-cols-4">
         <select
-          className="rounded border border-slate-300 px-3 py-2"
+          className="px-3 py-2 border-slate-300 rounded border"
           value={filters.teamId}
           onChange={(e) => setFilters((prev) => ({ ...prev, teamId: e.target.value }))}
         >
@@ -108,7 +109,7 @@ const TasksPage = ({ view = "team" }) => {
 
         {user?.role === "admin" && (
           <select
-            className="rounded border border-slate-300 px-3 py-2"
+            className="px-3 py-2 border-slate-300 rounded border"
             value={filters.assigneeId}
             onChange={(e) => setFilters((prev) => ({ ...prev, assigneeId: e.target.value }))}
           >
@@ -120,7 +121,7 @@ const TasksPage = ({ view = "team" }) => {
         )}
 
         <select
-          className="rounded border border-slate-300 px-3 py-2"
+          className="px-3 py-2 border-slate-300 rounded border"
           value={filters.status}
           onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
         >
@@ -131,7 +132,7 @@ const TasksPage = ({ view = "team" }) => {
         </select>
 
         <select
-          className="rounded border border-slate-300 px-3 py-2"
+          className="px-3 py-2 border-slate-300 rounded border"
           value={filters.priority}
           onChange={(e) => setFilters((prev) => ({ ...prev, priority: e.target.value }))}
         >
@@ -143,28 +144,28 @@ const TasksPage = ({ view = "team" }) => {
       </div>
 
       {user?.role === "admin" && (
-        <form onSubmit={createTask} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-2">
-          <input className="rounded border border-slate-300 px-3 py-2" placeholder="Title" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} required />
-          <input className="rounded border border-slate-300 px-3 py-2" type="date" value={form.dueDate} onChange={(e) => setForm((prev) => ({ ...prev, dueDate: e.target.value }))} required />
-          <textarea className="rounded border border-slate-300 px-3 py-2 md:col-span-2" placeholder="Description" value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
-          <select className="rounded border border-slate-300 px-3 py-2" value={form.teamId} onChange={(e) => setForm((prev) => ({ ...prev, teamId: e.target.value }))} required>
+        <form onSubmit={createTask} className="grid gap-3 p-4 bg-white rounded-lg border-slate-200 shadow-sm border md:grid-cols-2">
+          <input className="px-3 py-2 border-slate-300 rounded border" placeholder="Title" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} required />
+          <input className="px-3 py-2 border-slate-300 rounded border" type="date" value={form.dueDate} onChange={(e) => setForm((prev) => ({ ...prev, dueDate: e.target.value }))} required />
+          <textarea className="px-3 py-2 border-slate-300 rounded border md:col-span-2" placeholder="Description" value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
+          <select className="px-3 py-2 border-slate-300 rounded border" value={form.teamId} onChange={(e) => setForm((prev) => ({ ...prev, teamId: e.target.value }))} required>
             <option value="">Select Team</option>
             {teams.map((team) => <option key={team._id} value={team._id}>{team.name}</option>)}
           </select>
-          <select className="rounded border border-slate-300 px-3 py-2" value={form.assigneeId} onChange={(e) => setForm((prev) => ({ ...prev, assigneeId: e.target.value }))} required>
+          <select className="px-3 py-2 border-slate-300 rounded border" value={form.assigneeId} onChange={(e) => setForm((prev) => ({ ...prev, assigneeId: e.target.value }))} required>
             <option value="">Assign User</option>
             {users.map((u) => <option key={u._id} value={u._id}>{u.name}</option>)}
           </select>
-          <select className="rounded border border-slate-300 px-3 py-2 md:col-span-2" value={form.priority} onChange={(e) => setForm((prev) => ({ ...prev, priority: e.target.value }))}>
+          <select className="px-3 py-2 border-slate-300 rounded border md:col-span-2" value={form.priority} onChange={(e) => setForm((prev) => ({ ...prev, priority: e.target.value }))}>
             {priorityOptions.map((priority) => <option key={priority} value={priority}>{priority}</option>)}
           </select>
-          <button className="rounded bg-slate-900 px-4 py-2 text-white md:col-span-2" type="submit">Create Task</button>
+          <button className="px-4 py-2 text-white bg-slate-900 rounded md:col-span-2" type="submit">Create Task</button>
         </form>
       )}
 
       <div className="grid gap-3">
         {tasks.map((task) => (
-          <div key={task._id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div key={task._id} className="p-4 bg-white rounded-lg border-slate-200 shadow-sm border">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <h3 className="font-semibold">{task.title}</h3>
@@ -177,7 +178,7 @@ const TasksPage = ({ view = "team" }) => {
                 </p>
               </div>
               <select
-                className="rounded border border-slate-300 px-2 py-1 text-sm"
+                className="px-2 py-1 text-sm border-slate-300 rounded border"
                 value={task.status}
                 onChange={(e) => updateStatus(task._id, e.target.value)}
               >

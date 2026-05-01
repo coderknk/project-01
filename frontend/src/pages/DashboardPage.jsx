@@ -3,6 +3,8 @@ import api from "../api/client";
 import ErrorAlert from "../components/ErrorAlert";
 import LoadingSpinner from "../components/LoadingSpinner";
 import StatsCard from "../components/StatsCard";
+import { apiBaseUrl } from "../config.js";
+
 
 const DashboardPage = () => {
   const [stats, setStats] = useState(null);
@@ -12,7 +14,7 @@ const DashboardPage = () => {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const res = await api.get("/tasks/dashboard/stats");
+        const res = await api.get(`${apiBaseUrl}/tasks/dashboard/stats`);
         setStats(res.data.data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load dashboard");
